@@ -2,10 +2,10 @@ from math import sqrt
 
 
 class Colour(object):
-    def __init__(self, red, green, blue):
-        self.red = red
-        self.green = green
-        self.blue = blue
+    def __init__(self, red: float, green: float, blue: float):
+        self.red = float(red)
+        self.green = float(green)
+        self.blue = float(blue)
 
     @staticmethod
     def __rgb_convert(value):
@@ -17,6 +17,14 @@ class Colour(object):
             (self.green - colour.green)**2 +
             (self.blue - colour.green)**2
         )
+
+    @staticmethod
+    def list_from_tuple_list(colours_list) -> list:
+        colours = []
+        for element in colours_list:
+            colour = Colour(element[0], element[1], element[2])
+            colours.append(colour)
+        return colours
 
     def to_rgb(self):
         """
