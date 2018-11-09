@@ -1,7 +1,10 @@
 import os
+import random
 
 import matplotlib.pyplot as plt
 import numpy as np
+
+from Colour import ColoursList
 
 
 def get_current_dir():
@@ -43,3 +46,19 @@ def plot_colours(colours, perm):
     axes.imshow(img, interpolation='nearest')
     axes.axis('off')
     plt.show()
+
+
+def plot_colours_improved(colours: ColoursList):
+    ratio = 10  # ratio of line height/width, e.g. colour lines will have height 10 and width 1
+    img = np.zeros((ratio, len(colours), 3))
+    for i in range(len(colours)):
+        img[:, i, :] = colours[i].to_tuple()
+
+    fig, axes = plt.subplots(1, figsize=(8, 4))  # figsize=(width,height) handles window dimensions
+    axes.imshow(img, interpolation='nearest')
+    axes.axis('off')
+    plt.show()
+
+
+def get_permutation(size: int):
+    return random.sample(range(size), size)
