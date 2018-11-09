@@ -52,7 +52,7 @@ class GreedyConstructive(Algorithm):
         solution.append(current_colour)
         while len(colours) > 0:
             # Get the nearest colour to the current one
-            current_colour = colours.get_nearest_colour(current_colour)
+            current_colour, _ = colours.get_nearest_colour(current_colour)
             solution.append(current_colour)
             del colours[current_colour]
         return solution
