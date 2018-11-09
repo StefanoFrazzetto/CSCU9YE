@@ -1,7 +1,6 @@
 import abc
 from enum import Enum
 
-
 from Colour import ColoursList
 
 
@@ -65,12 +64,21 @@ class HillClimbing(Algorithm):
     def __init__(self):
         super(HillClimbing, self).__init__()
 
+    def get_solution(self, *args) -> ColoursList:
+        pass
+
 
 class MultiStartHillClimbing(Algorithm):
     def __init__(self):
         super(MultiStartHillClimbing, self).__init__()
 
+    def get_solution(self, *args) -> ColoursList:
+        pass
+
 
 class CustomAlgorithm(Algorithm):
     def __init__(self):
         super(CustomAlgorithm, self).__init__()
+
+    def get_solution(self, *args) -> ColoursList:
+        pass
