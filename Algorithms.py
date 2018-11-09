@@ -1,4 +1,5 @@
 import abc
+import copy
 from enum import Enum
 
 from Colour import ColoursList
@@ -14,11 +15,11 @@ class AlgorithmType(Enum):
 class Algorithm(metaclass=abc.ABCMeta):
     colours_list: ColoursList
 
-    def __init__(self):
+    def __init__(self, *args):
         self.colours_list = ColoursList()
 
     @staticmethod
-    def factory(algorithm_type: AlgorithmType):
+    def factory(algorithm_type: AlgorithmType, *args):
         """Define factory method for algorithms."""
         assert algorithm_type in AlgorithmType, f"Unrecognised algorithm {algorithm_type.name}"
 
@@ -26,7 +27,7 @@ class Algorithm(metaclass=abc.ABCMeta):
             return GreedyConstructive()
 
         if algorithm_type == AlgorithmType.HILL_CLIMBING:
-            return HillClimbing()
+            return HillClimbing(iterations=args[0])
 
         if algorithm_type == AlgorithmType.MULTI_START_HC:
             return MultiStartHillClimbing()
@@ -35,7 +36,7 @@ class Algorithm(metaclass=abc.ABCMeta):
             return CustomAlgorithm()
 
     def load_colours_list(self, colours_list: ColoursList):
-        self.colours_list = colours_list
+        self.colours_list = copy.deepcopy(colours_list)
 
     @abc.abstractmethod
     def get_solution(self, *args) -> ColoursList:
@@ -43,7 +44,7 @@ class Algorithm(metaclass=abc.ABCMeta):
 
 
 class GreedyConstructive(Algorithm):
-    def get_solution(self, iterations: int):
+    def get_solution(self):
         colours = self.colours_list
         solution = ColoursList()
         # Get a random colour
@@ -61,11 +62,31 @@ class GreedyConstructive(Algorithm):
 
 
 class HillClimbing(Algorithm):
-    def __init__(self):
+    def __init__(self, iterations):
         super(HillClimbing, self).__init__()
+        self.iterations = iterations
 
-    def get_solution(self, *args) -> ColoursList:
-        pass
+    def __invert_range(self, start, end):
+        self.colours_list.colours[start:end] = self.colours_list[start:end][::-1]
+
+    def get_solution(self) -> ColoursList:
+        random_solution = self.colours_list.random_permutation(len(self.colours_list))
+        while self.iterations > 0:
+            random_colour1 = random_solution.get_random_element()
+            random_colour2 = random_solution.get_random_element()
+
+            # Ensure that the elements are different
+            while random_colour1 == random_colour2:
+                random_colour2 = random_solution.get_random_element()
+
+            index_1 = self.colours_list.index(random_colour1)
+            index_2 = self.colours_list.index(random_colour2)
+
+            self.__invert_range(index_1, index_2)
+
+            # One less to go...
+            self.iterations -= 1
+        return random_solution
 
 
 class MultiStartHillClimbing(Algorithm):

@@ -22,7 +22,14 @@ colours_list = ColoursList.list_from_tuple_list(test_colours)
 cl = colours_list.random_permutation(test_size)
 Utils.plot_colours_improved(cl)
 
+# GC
 algorithm = Algorithm.factory(AlgorithmType.GREEDY_CONSTRUCTIVE)
 algorithm.load_colours_list(cl)
-cl_s = algorithm.get_solution(200)
+cl_s = algorithm.get_solution()
+Utils.plot_colours_improved(cl_s)
+
+# HC
+algorithm = Algorithm.factory(AlgorithmType.HILL_CLIMBING, 50000)
+algorithm.load_colours_list(cl)
+cl_s = algorithm.get_solution()
 Utils.plot_colours_improved(cl_s)

@@ -82,6 +82,9 @@ class ColoursList(object):
         for colour in self.get_all():
             print(colour)
 
+    def index(self, element):
+        return self.colours.index(element)
+
     def append(self, colour: Colour):
         """Append a colour to the list"""
         self.colours.append(colour)
@@ -112,13 +115,19 @@ class ColoursList(object):
                 total_distance += min_distance
         return nearest_colour, total_distance
 
+    def get_total_distance(self):
+        total = 0
+        for i in range(len(self) - 1):
+            total = self.get(i).distance_from(self.get(i + 1))
+        return total
+
     def random_sample(self, elements) -> List[Colour]:
         return random.sample(self.colours, elements)
 
     def random_permutation(self, size) -> 'ColoursList':
         new_list = ColoursList()
         permutation = Utils.get_permutation(size)
-        for i in range(len(self.get_all())):
+        for i in range(len(self)):
             new_list.append(self.get(permutation[i]))
         return new_list
 
@@ -126,6 +135,9 @@ class ColoursList(object):
         colour = random.choice(self.colours)
         del self[colour]
         return colour
+
+    def get_random_element(self):
+        return random.choice(self.colours)
 
     @staticmethod
     def list_from_tuple_list(colours_list: list) -> 'ColoursList':
