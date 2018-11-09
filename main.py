@@ -1,7 +1,7 @@
 import random
 
 import Utils
-from Algorithms import Algorithm, AlgorithmType
+from Algorithms import Algorithm, AlgorithmType, GreedyConstructive
 from Colour import Colour, ColoursList
 
 dir_path = Utils.get_current_dir()  # Get current dir
@@ -23,13 +23,25 @@ cl = colours_list.random_permutation(test_size)
 Utils.plot_colours_improved(cl)
 
 # GC
-algorithm = Algorithm.factory(AlgorithmType.GREEDY_CONSTRUCTIVE)
+algorithm = Algorithm.factory(AlgorithmType.GREEDY_CONSTRUCTIVE, GreedyConstructive.DistanceMethod.EUCLIDEAN)
 algorithm.load_colours_list(cl)
 cl_s = algorithm.get_solution()
 Utils.plot_colours_improved(cl_s)
 
 # HC
-algorithm = Algorithm.factory(AlgorithmType.HILL_CLIMBING, 50000)
+algorithm = Algorithm.factory(AlgorithmType.HILL_CLIMBING, 5000)
+algorithm.load_colours_list(cl)
+cl_s = algorithm.get_solution()
+Utils.plot_colours_improved(cl_s)
+
+# MSHC
+algorithm = Algorithm.factory(AlgorithmType.MULTI_START_HC, 50000)
+algorithm.load_colours_list(cl)
+cl_s = algorithm.get_solution()
+Utils.plot_colours_improved(cl_s[0])
+
+# CUSTOM
+algorithm = Algorithm.factory(AlgorithmType.CUSTOM_ALGORITHM)
 algorithm.load_colours_list(cl)
 cl_s = algorithm.get_solution()
 Utils.plot_colours_improved(cl_s)

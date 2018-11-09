@@ -103,7 +103,7 @@ class ColoursList(object):
     def sort(self):
         return np.sort(self.colours)
 
-    def get_nearest_colour(self, colour: Colour) -> (Colour, float):
+    def get_nearest_colour_euclidean(self, colour: Colour) -> (Colour, float):
         total_distance = 0
         min_distance = inf
         nearest_colour = Colour(50, 50, 50)
@@ -115,7 +115,19 @@ class ColoursList(object):
                 total_distance += min_distance
         return nearest_colour, total_distance
 
-    def get_total_distance(self):
+    def get_nearest_colour_delta_e(self, colour: Colour) -> (Colour, float):
+        total_distance = 0
+        min_distance = inf
+        nearest_colour = Colour(50, 50, 50)
+        for current_colour in self.colours:
+            current_distance = current_colour.delta_e(colour)
+            if current_distance < min_distance:
+                nearest_colour = current_colour
+                min_distance = current_distance
+                total_distance += min_distance
+        return nearest_colour, total_distance
+
+    def get_total_distance(self) -> float:
         total = 0
         for i in range(len(self) - 1):
             total = self.get(i).distance_from(self.get(i + 1))
