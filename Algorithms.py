@@ -17,6 +17,8 @@ class Algorithm(metaclass=abc.ABCMeta):
 
     def __init__(self, *args):
         self.colours_list = ColoursList()
+        self.solution = None
+        self.debug = True
 
     @staticmethod
     def factory(algorithm_type: AlgorithmType, *args):
@@ -38,8 +40,12 @@ class Algorithm(metaclass=abc.ABCMeta):
     def load_colours_list(self, colours_list: ColoursList):
         self.colours_list = copy.deepcopy(colours_list)
 
+    def get_solution(self):
+        assert self.solution is not None, "The solution has not been found yet."
+        return self.solution
+
     @abc.abstractmethod
-    def get_solution(self, *args) -> ColoursList:
+    def find_solution(self, *args) -> ColoursList:
         pass
 
 
@@ -52,7 +58,7 @@ class GreedyConstructive(Algorithm):
         super(GreedyConstructive, self).__init__()
         self.distance_method = distance_method
 
-    def get_solution(self):
+    def find_solution(self) -> ColoursList:
         colours = copy.deepcopy(self.colours_list)
         solution = ColoursList()
         # Get a random colour
@@ -72,28 +78,58 @@ class HillClimbing(Algorithm):
     def __init__(self, iterations: int = 1):
         super(HillClimbing, self).__init__()
         self.iterations = iterations
+        self.solution = self.__get_random_permutation()
+        self.temp_solution = self.solution.get_copy()
 
-    def __invert_range(self, start, end):
-        self.colours_list.colours[start:end] = self.colours_list[start:end][::-1]
+    @staticmethod
+    def __invert_range(colours_list: ColoursList, start, end):
+        colours_list.colours[start:end] = colours_list[start:end][::-1]
 
-    def get_solution(self) -> ColoursList:
-        random_solution = self.colours_list.random_permutation(len(self.colours_list))
+    @staticmethod
+    def __get_random_indexes(colours_list: ColoursList):
+        """
+        Get two random indexes from colours_list ensuring that index1 < index2.
+        :param colours_list: the list of colours from which the elements are taken.
+        :return: int index1, int index2
+        """
+        random_colour1 = colours_list.get_random_element()
+        random_colour2 = colours_list.get_random_element()
+
+        # Ensure that the elements are different
+        while random_colour1 == random_colour2:
+            random_colour2 = colours_list.get_random_element()
+
+        index1 = colours_list.index(random_colour1)
+        index2 = colours_list.index(random_colour2)
+
+        # Swap indexes if index1 > index2
+        if index1 > index2:
+            index1, index2 = index2, index1
+
+        return index1, index2
+
+    def __get_random_permutation(self):
+        return self.colours_list.random_permutation(len(self.colours_list))
+
+    def find_solution(self) -> ColoursList:
+        best_solution_distance = self.temp_solution.get_total_distance()
+
         while self.iterations > 0:
-            random_colour1 = random_solution.get_random_element()
-            random_colour2 = random_solution.get_random_element()
+            index1, index2 = self.__get_random_indexes(self.temp_solution)
+            self.__invert_range(self.temp_solution, index1, index2)
 
-            # Ensure that the elements are different
-            while random_colour1 == random_colour2:
-                random_colour2 = random_solution.get_random_element()
-
-            index_1 = self.colours_list.index(random_colour1)
-            index_2 = self.colours_list.index(random_colour2)
-
-            self.__invert_range(index_1, index_2)
+            current_solution_distance = self.temp_solution.get_total_distance()
+            if current_solution_distance < best_solution_distance:
+                if self.debug:
+                    print("Better solution found!")
+                    print(f"Previous distance: {best_solution_distance} - New distance: {current_solution_distance}")
+                self.solution = self.temp_solution
+                best_solution_distance = current_solution_distance
 
             # One less to go...
             self.iterations -= 1
-        return random_solution
+
+        return self.solution
 
 
 class MultiStartHillClimbing(Algorithm):
@@ -101,25 +137,23 @@ class MultiStartHillClimbing(Algorithm):
         super(MultiStartHillClimbing, self).__init__()
         self.iterations = iterations
 
-    def get_solution(self) -> list:
-        algo = Algorithm.factory(AlgorithmType.HILL_CLIMBING, 5000)
+    def find_solution(self) -> ColoursList:
+        algo = Algorithm.factory(AlgorithmType.HILL_CLIMBING, 0)
         algo.load_colours_list(self.colours_list)
         solutions = []
         while self.iterations > 0:
-            solution = algo.get_solution()
+            solution = algo.find_solution()
             solutions.append(solution)
             self.iterations -= 1
         solutions = sorted(solutions, key=lambda sol: sol.get_total_distance())
-        return solutions
+        return solutions[0]
 
 
 class CustomAlgorithm(Algorithm):
     def __init__(self):
         super(CustomAlgorithm, self).__init__()
 
-    def get_solution(self) -> ColoursList:
+    def find_solution(self) -> ColoursList:
         algo2 = Algorithm.factory(AlgorithmType.GREEDY_CONSTRUCTIVE, GreedyConstructive.DistanceMethod.DELTA_E)
         algo2.load_colours_list(self.colours_list)
-        return algo2.get_solution()
-
-
+        return algo2.find_solution()

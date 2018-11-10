@@ -1,3 +1,4 @@
+import copy
 import random
 from functools import total_ordering
 from math import inf
@@ -82,6 +83,12 @@ class ColoursList(object):
         for colour in self.get_all():
             print(colour)
 
+    def __eq__(self, other):
+        for i in range(len(self)):
+            if self.get(i) != other.get(i):
+                return False
+        return True
+
     def index(self, element):
         return self.colours.index(element)
 
@@ -110,6 +117,7 @@ class ColoursList(object):
         for current_colour in self.colours:
             current_distance = current_colour.distance_from(colour)
             if current_distance < min_distance:
+
                 nearest_colour = current_colour
                 min_distance = current_distance
                 total_distance += min_distance
@@ -130,8 +138,11 @@ class ColoursList(object):
     def get_total_distance(self) -> float:
         total = 0
         for i in range(len(self) - 1):
-            total = self.get(i).distance_from(self.get(i + 1))
+            total += self.get(i).distance_from(self.get(i + 1))
         return total
+
+    def get_copy(self):
+        return copy.deepcopy(self)
 
     def random_sample(self, elements) -> List[Colour]:
         return random.sample(self.colours, elements)
