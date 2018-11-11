@@ -2,7 +2,7 @@ import abc
 import copy
 from enum import Enum
 
-from Colour import ColoursList
+from Colour import ColoursList, ColourUtils
 
 
 class AlgorithmType(Enum):
@@ -44,6 +44,9 @@ class Algorithm(metaclass=abc.ABCMeta):
         assert self.solution is not None, "The solution has not been found yet."
         return self.solution
 
+    def get_algorithm_name(self) -> str:
+        return self.__class__.__name__
+
     @abc.abstractmethod
     def find_solution(self, *args) -> ColoursList:
         pass
@@ -60,7 +63,7 @@ class GreedyConstructive(Algorithm):
 
     def find_solution(self) -> ColoursList:
         colours = copy.deepcopy(self.colours_list)
-        solution = ColoursList()
+        self.solution = solution = ColoursList()
         # Get a random colour
         current_colour = colours.pop_random()
         solution.append(current_colour)
@@ -71,36 +74,45 @@ class GreedyConstructive(Algorithm):
                 else colours.get_nearest_colour_delta_e(current_colour)
             solution.append(current_colour)
             del colours[current_colour]
+
         return solution
 
 
 class HillClimbing(Algorithm):
+    solution: ColoursList
+    temp_solution: ColoursList
+
     def __init__(self, iterations: int = 1):
         super(HillClimbing, self).__init__()
         self.iterations = iterations
+        self.temp_solution = None
+
+    def load_colours_list(self, colours_list: ColoursList):
+        super(HillClimbing, self).load_colours_list(colours_list)
         self.solution = self.__get_random_permutation()
-        self.temp_solution = self.solution.get_copy()
+        self.temp_solution = self.solution.clone()
 
     @staticmethod
     def __invert_range(colours_list: ColoursList, start, end):
         colours_list.colours[start:end] = colours_list[start:end][::-1]
 
-    @staticmethod
-    def __get_random_indexes(colours_list: ColoursList):
+    def __swap_colours(self, index1, index2):
+        self.temp_solution[index1], self.temp_solution[index2] = self.temp_solution[index2], self.temp_solution[index1]
+
+    def __get_random_indexes(self) -> (int, int):
         """
-        Get two random indexes from colours_list ensuring that index1 < index2.
-        :param colours_list: the list of colours from which the elements are taken.
+        Get two random indexes from self.temp_solution ensuring that index1 < index2.
         :return: int index1, int index2
         """
-        random_colour1 = colours_list.get_random_element()
-        random_colour2 = colours_list.get_random_element()
+        colour1 = self.temp_solution.get_random_element()
+        colour2 = self.temp_solution.get_random_element()
 
         # Ensure that the elements are different
-        while random_colour1 == random_colour2:
-            random_colour2 = colours_list.get_random_element()
+        while colour1 == colour2:
+            colour2 = self.temp_solution.get_random_element()
 
-        index1 = colours_list.index(random_colour1)
-        index2 = colours_list.index(random_colour2)
+        index1 = self.temp_solution.get_index(colour1)
+        index2 = self.temp_solution.get_index(colour2)
 
         # Swap indexes if index1 > index2
         if index1 > index2:
@@ -114,20 +126,20 @@ class HillClimbing(Algorithm):
     def find_solution(self) -> ColoursList:
         best_solution_distance = self.temp_solution.get_total_distance()
 
-        while self.iterations > 0:
-            index1, index2 = self.__get_random_indexes(self.temp_solution)
-            self.__invert_range(self.temp_solution, index1, index2)
+        for i in range(self.iterations):
+            # Go back to original state
+            self.temp_solution = self.solution.clone()
+
+            index1, index2 = self.__get_random_indexes()
+            self.__swap_colours(index1, index2)
 
             current_solution_distance = self.temp_solution.get_total_distance()
             if current_solution_distance < best_solution_distance:
                 if self.debug:
                     print("Better solution found!")
                     print(f"Previous distance: {best_solution_distance} - New distance: {current_solution_distance}")
-                self.solution = self.temp_solution
+                self.solution = self.temp_solution.clone()
                 best_solution_distance = current_solution_distance
-
-            # One less to go...
-            self.iterations -= 1
 
         return self.solution
 

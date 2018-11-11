@@ -36,7 +36,7 @@ class Colour(object):
 
     # STATIC METHODS
     @staticmethod
-    def calculate_distance(colour1: 'Colour', colour2: 'Colour'):
+    def calculate_distance(colour1: 'Colour', colour2: 'Colour') -> float:
         s = (colour1.red - colour2.red) ** 2 + (colour1.green - colour2.green) ** 2 + (colour1.blue - colour2.blue) ** 2
         return s ** (1 / 2) if s > 0 else 0
 
@@ -99,6 +99,9 @@ class ColoursList(object):
     def __len__(self):
         return len(self.colours)
 
+    def __setitem__(self, key, value):
+        self.colours[key] = value
+
     def __str__(self):
         for colour in self.get_all():
             print(colour)
@@ -123,6 +126,9 @@ class ColoursList(object):
 
     def get_all(self) -> list:
         return self.colours
+
+    def get_index(self, colour: Colour):
+        return self.colours.index(colour)
 
     def get_random_element(self):
         return random.choice(self.colours)

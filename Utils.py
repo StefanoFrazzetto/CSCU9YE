@@ -4,6 +4,7 @@ import random
 import matplotlib.pyplot as plt
 import numpy as np
 
+from Algorithms import Algorithm
 from Colour import ColoursList
 
 
@@ -48,7 +49,11 @@ def plot_colours(colours, perm):
     plt.show()
 
 
-def plot_colours_improved(colours: ColoursList):
+def plot_from_algorithm(algorithm: Algorithm):
+    plot_colours_improved(algorithm.get_solution(), algorithm)
+
+
+def plot_colours_improved(colours: ColoursList, algorithm: Algorithm = None):
     ratio = 10  # ratio of line height/width, e.g. colour lines will have height 10 and width 1
     img = np.zeros((ratio, len(colours), 3))
     for i in range(len(colours)):
@@ -57,6 +62,10 @@ def plot_colours_improved(colours: ColoursList):
     fig, axes = plt.subplots(1, figsize=(8, 4))  # figsize=(width,height) handles window dimensions
     axes.imshow(img, interpolation='nearest')
     axes.axis('off')
+
+    if algorithm is not None:
+        plt.text(0, 18, f"Algorithm: {algorithm.get_algorithm_name()}")
+    plt.text(0, 20, f"Total distance: {colours.get_total_distance()}")
     plt.show()
 
 
