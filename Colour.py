@@ -56,7 +56,7 @@ class Colour(object):
     def distance_from(self, colour: 'Colour'):
         return self.calculate_distance(self, colour)
 
-    def to_delta_e(self, other: 'Colour') -> Union[float, int, complex]:
+    def to_delta_e(self, other: 'Colour'):
         return delta_e_cie2000(self.__to_lbc(), other.__to_lbc())
 
     def to_rgb(self):
