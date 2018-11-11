@@ -28,13 +28,13 @@ algorithm.find_solution()
 Utils.plot_from_algorithm(algorithm)
 
 # MSHC
-algorithm = Algorithm.factory(AlgorithmType.MULTI_START_HC, 50000)
+algorithm = Algorithm.factory(AlgorithmType.MULTI_START_HC, 5)
 algorithm.load_colours_list(cl)
-cl_s = algorithm.find_solution()
-Utils.plot_colours_improved(cl_s)
+algorithm.find_solution()
+Utils.plot_from_algorithm(algorithm)
 
 # CUSTOM
 algorithm = Algorithm.factory(AlgorithmType.CUSTOM_ALGORITHM)
 algorithm.load_colours_list(cl)
-cl_s = algorithm.find_solution()
-Utils.plot_colours_improved(cl_s)
+algorithm.find_solution()
+Utils.plot_from_algorithm(algorithm)

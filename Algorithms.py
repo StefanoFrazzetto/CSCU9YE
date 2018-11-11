@@ -150,7 +150,7 @@ class MultiStartHillClimbing(Algorithm):
         self.iterations = iterations
 
     def find_solution(self) -> ColoursList:
-        algo = Algorithm.factory(AlgorithmType.HILL_CLIMBING, 0)
+        algo = Algorithm.factory(AlgorithmType.HILL_CLIMBING, 50000)
         algo.load_colours_list(self.colours_list)
         solutions = []
         while self.iterations > 0:
