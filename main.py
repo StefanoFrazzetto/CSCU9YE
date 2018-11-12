@@ -13,7 +13,7 @@ test_colours = colours[0:test_size]  # list of colours for testing
 colours_list = ColourUtils.list_from_tuple_list(test_colours)
 
 cl = colours_list.random_permutation(test_size)
-# Utils.plot_colours_improved(cl)
+Utils.plot_colours_improved(cl)
 
 # GC
 algorithm = Algorithm.factory(AlgorithmType.GREEDY_CONSTRUCTIVE, GreedyConstructive.DistanceMethod.EUCLIDEAN)
@@ -28,7 +28,7 @@ algorithm.find_solution()
 Utils.plot_from_algorithm(algorithm)
 
 # MSHC
-algorithm = Algorithm.factory(AlgorithmType.MULTI_START_HC, 5)
+algorithm = Algorithm.factory(AlgorithmType.MULTI_START_HC, 5, 50000)
 algorithm.load_colours_list(cl)
 algorithm.find_solution()
 Utils.plot_from_algorithm(algorithm)

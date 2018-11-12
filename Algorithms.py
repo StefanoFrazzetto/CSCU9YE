@@ -2,7 +2,7 @@ import abc
 import copy
 from enum import Enum
 
-from Colour import ColoursList, ColourUtils
+from Colour import ColoursList
 
 
 class AlgorithmType(Enum):
@@ -32,13 +32,13 @@ class Algorithm(metaclass=abc.ABCMeta):
             return HillClimbing(iterations=args[0])
 
         if algorithm_type == AlgorithmType.MULTI_START_HC:
-            return MultiStartHillClimbing(iterations=args[0])
+            return MultiStartHillClimbing(starts=args[0], hill_climbing_iterations=args[1])
 
         if algorithm_type == AlgorithmType.CUSTOM_ALGORITHM:
             return CustomAlgorithm()
 
     def load_colours_list(self, colours_list: ColoursList):
-        self.colours_list = copy.deepcopy(colours_list)
+        self.colours_list = colours_list.clone()
 
     def get_solution(self):
         assert self.solution is not None, "The solution has not been found yet."
@@ -48,7 +48,7 @@ class Algorithm(metaclass=abc.ABCMeta):
         return self.__class__.__name__
 
     @abc.abstractmethod
-    def find_solution(self, *args) -> ColoursList:
+    def find_solution(self, *args):
         pass
 
 
@@ -61,9 +61,9 @@ class GreedyConstructive(Algorithm):
         super(GreedyConstructive, self).__init__()
         self.distance_method = distance_method
 
-    def find_solution(self) -> ColoursList:
+    def find_solution(self):
         colours = copy.deepcopy(self.colours_list)
-        self.solution = solution = ColoursList()
+        solution = ColoursList()
         # Get a random colour
         current_colour = colours.pop_random()
         solution.append(current_colour)
@@ -75,7 +75,7 @@ class GreedyConstructive(Algorithm):
             solution.append(current_colour)
             del colours[current_colour]
 
-        return solution
+        self.solution = solution
 
 
 class HillClimbing(Algorithm):
@@ -123,7 +123,7 @@ class HillClimbing(Algorithm):
     def __get_random_permutation(self):
         return self.colours_list.random_permutation(len(self.colours_list))
 
-    def find_solution(self) -> ColoursList:
+    def find_solution(self):
         best_solution_distance = self.temp_solution.get_total_distance()
 
         for i in range(self.iterations):
@@ -141,31 +141,31 @@ class HillClimbing(Algorithm):
                 self.solution = self.temp_solution.clone()
                 best_solution_distance = current_solution_distance
 
-        return self.solution
-
 
 class MultiStartHillClimbing(Algorithm):
-    def __init__(self, iterations):
+    def __init__(self, starts, hill_climbing_iterations):
         super(MultiStartHillClimbing, self).__init__()
-        self.iterations = iterations
+        self.starts = starts
+        self.hill_climbing_iterations = hill_climbing_iterations
 
-    def find_solution(self) -> ColoursList:
-        algo = Algorithm.factory(AlgorithmType.HILL_CLIMBING, 50000)
-        algo.load_colours_list(self.colours_list)
+    def find_solution(self):
+        algorithm = Algorithm.factory(AlgorithmType.HILL_CLIMBING, self.hill_climbing_iterations)
+        algorithm.load_colours_list(self.colours_list)
         solutions = []
-        while self.iterations > 0:
-            solution = algo.find_solution()
-            solutions.append(solution)
-            self.iterations -= 1
+        for i in range(self.starts):
+            algorithm.find_solution()
+            solutions.append(algorithm.get_solution())
+
         solutions = sorted(solutions, key=lambda sol: sol.get_total_distance())
-        return solutions[0]
+        self.solution = solutions[0]
 
 
 class CustomAlgorithm(Algorithm):
     def __init__(self):
         super(CustomAlgorithm, self).__init__()
 
-    def find_solution(self) -> ColoursList:
+    def find_solution(self):
         algo2 = Algorithm.factory(AlgorithmType.GREEDY_CONSTRUCTIVE, GreedyConstructive.DistanceMethod.DELTA_E)
         algo2.load_colours_list(self.colours_list)
-        return algo2.find_solution()
+        algo2.find_solution()
+        self.solution = algo2.get_solution()
