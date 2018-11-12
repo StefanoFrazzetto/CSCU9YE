@@ -18,23 +18,23 @@ Utils.plot_colours_improved(cl)
 # GC
 algorithm = Algorithm.factory(AlgorithmType.GREEDY_CONSTRUCTIVE, GreedyConstructive.DistanceMethod.EUCLIDEAN)
 algorithm.load_colours_list(cl)
-algorithm.find_solution()
+algorithm.run()
 Utils.plot_from_algorithm(algorithm)
 
 # HC
 algorithm = Algorithm.factory(AlgorithmType.HILL_CLIMBING, 50000)
 algorithm.load_colours_list(cl)
-algorithm.find_solution()
+algorithm.run()
 Utils.plot_from_algorithm(algorithm)
 
 # MSHC
 algorithm = Algorithm.factory(AlgorithmType.MULTI_START_HC, 5, 50000)
 algorithm.load_colours_list(cl)
-algorithm.find_solution()
+algorithm.run()
 Utils.plot_from_algorithm(algorithm)
 
 # CUSTOM
 algorithm = Algorithm.factory(AlgorithmType.CUSTOM_ALGORITHM)
 algorithm.load_colours_list(cl)
-algorithm.find_solution()
+algorithm.run()
 Utils.plot_from_algorithm(algorithm)

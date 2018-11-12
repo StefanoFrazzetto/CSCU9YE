@@ -1,11 +1,20 @@
 import os
 import random
+import time
 
 import matplotlib.pyplot as plt
 import numpy as np
 
 from Algorithms import Algorithm
 from Colour import ColoursList
+
+
+def get_timestamp_millis():
+    return int(round(time.time() * 1000))
+
+
+def millis_to_seconds(time1, time2):
+    return (time1 - time2) / 1000
 
 
 def get_current_dir():
@@ -65,7 +74,9 @@ def plot_colours_improved(colours: ColoursList, algorithm: Algorithm = None):
 
     if algorithm is not None:
         plt.text(0, 18, f"Algorithm: {algorithm.get_algorithm_name()}")
-    plt.text(0, 20, f"Total distance: {colours.get_total_distance()}")
+        plt.text(0, 20, f"Running time: {algorithm.get_time_performance()} s")
+    formatted_distance = "{0:.2f}".format(colours.get_total_distance())
+    plt.text(0, 22, f"Total distance (euclidean): {formatted_distance}")
     plt.show()
 
 

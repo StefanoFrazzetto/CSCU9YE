@@ -2,6 +2,7 @@ import abc
 import copy
 from enum import Enum
 
+import Utils
 from Colour import ColoursList
 
 
@@ -18,10 +19,17 @@ class Algorithm(metaclass=abc.ABCMeta):
     def __init__(self, *args):
         self.colours_list = ColoursList()
         self.solution = None
+
+        # Debug
         self.debug = True
 
+        # Performance time
+        self.start_time = Utils.get_timestamp_millis()
+        self.end_time = None
+        self.running_time = None
+
     @staticmethod
-    def factory(algorithm_type: AlgorithmType, *args):
+    def factory(algorithm_type: AlgorithmType, *args) -> 'Algorithm':
         """Define factory method for algorithms."""
         assert algorithm_type in AlgorithmType, f"Unrecognised algorithm {algorithm_type.name}"
 
@@ -37,19 +45,34 @@ class Algorithm(metaclass=abc.ABCMeta):
         if algorithm_type == AlgorithmType.CUSTOM_ALGORITHM:
             return CustomAlgorithm()
 
-    def load_colours_list(self, colours_list: ColoursList):
-        self.colours_list = colours_list.clone()
+    @abc.abstractmethod
+    def find_solution(self, *args):
+        pass
+
+    def get_algorithm_name(self) -> str:
+        return self.__class__.__name__
 
     def get_solution(self):
         assert self.solution is not None, "The solution has not been found yet."
         return self.solution
 
-    def get_algorithm_name(self) -> str:
-        return self.__class__.__name__
+    def get_time_performance(self):
+        """
+        Get the running time by subtracting end time from start time.
+        :return: the algorithm running time in microseconds.
+        """
+        seconds = Utils.millis_to_seconds(self.end_time, self.start_time)
+        return "{0:.2f}".format(seconds)
 
-    @abc.abstractmethod
-    def find_solution(self, *args):
-        pass
+    def load_colours_list(self, colours_list: ColoursList):
+        self.colours_list = colours_list.clone()
+
+    def run(self, *args):
+        self.find_solution(*args)
+        self.set_end_time()
+
+    def set_end_time(self):
+        self.end_time = Utils.get_timestamp_millis()
 
 
 class GreedyConstructive(Algorithm):

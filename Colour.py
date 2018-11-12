@@ -15,7 +15,7 @@ import Utils
 
 @total_ordering
 class Colour(object):
-    # MAGIC METHODS
+    # BUILT-IN METHODS
     def __init__(self, red: float, green: float, blue: float):
         self.red = float(red)
         self.green = float(green)
@@ -73,7 +73,7 @@ class Colour(object):
 class ColoursList(object):
     colours: List[Colour]
 
-    # MAGIC METHODS
+    # BUILT-IN METHODS
     def __init__(self):
         self.colours = []
 
