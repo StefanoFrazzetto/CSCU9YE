@@ -1,6 +1,9 @@
 import abc
 import copy
+import threading
 from enum import Enum
+from functools import total_ordering
+from typing import List
 
 import Utils
 from Colour import ColoursList
@@ -13,20 +16,47 @@ class AlgorithmType(Enum):
     CUSTOM_ALGORITHM = 3
 
 
-class Algorithm(metaclass=abc.ABCMeta):
-    colours_list: ColoursList
+@total_ordering
+class AlgorithmSolution(object):
+    """
+    The solution found by the algorithm.
+    """
+    colours: ColoursList
+    run_time: float
+    total_distance: float
+
+    def __init__(self, colours: ColoursList, run_time: float, total_distance: float = None):
+        self.colours = colours
+        self.run_time = run_time
+        self.total_distance = colours.get_total_distance() if total_distance is None else total_distance
+
+    def __eq__(self, other: 'AlgorithmSolution'):
+        return self.colours == other.colours and \
+               self.total_distance == other.total_distance and \
+               self.run_time == other.run_time
+
+    def __lt__(self, other: 'AlgorithmSolution'):
+        return self.total_distance < other.total_distance
+
+
+class Algorithm(threading.Thread, metaclass=abc.ABCMeta):
+    colours: ColoursList
+    solutions: List[AlgorithmSolution]
 
     def __init__(self, *args):
-        self.colours_list = ColoursList()
-        self.solution = None
+        threading.Thread.__init__(self)
+        self.colours = ColoursList()
+        self.solutions = []
 
         # Debug
         self.debug = True
 
-        # Performance time
+        # Performance
         self.start_time = Utils.get_timestamp_millis()
-        self.end_time = None
-        self.running_time = None
+        self.end_time = 0
+        self.run_time = 0
+        self.total_distance = 0
+        self.results = []
 
     @staticmethod
     def factory(algorithm_type: AlgorithmType, *args) -> 'Algorithm':
@@ -52,27 +82,34 @@ class Algorithm(metaclass=abc.ABCMeta):
     def get_algorithm_name(self) -> str:
         return self.__class__.__name__
 
-    def get_solution(self):
-        assert self.solution is not None, "The solution has not been found yet."
-        return self.solution
+    def get_solutions(self) -> List[AlgorithmSolution]:
+        assert self.solutions is not None, "No solutions have been found yet."
+        return self.solutions
 
-    def get_time_performance(self):
+    def get_best_solution(self):
+        sorted(self.solutions)
+        return self.solutions[-1]
+
+    def __calculate_run_time(self):
         """
         Get the running time by subtracting end time from start time.
         :return: the algorithm running time in microseconds.
         """
         seconds = Utils.millis_to_seconds(self.end_time, self.start_time)
-        return "{0:.2f}".format(seconds)
+        return float("{0:.2f}".format(seconds))
 
     def load_colours_list(self, colours_list: ColoursList):
-        self.colours_list = colours_list.clone()
+        self.colours = colours_list.clone()
 
     def run(self, *args):
         self.find_solution(*args)
-        self.set_end_time()
+        self.end_time = self.end_time = Utils.get_timestamp_millis()
+        self.run_time = self.__calculate_run_time()
+        self.__save_solution()
 
-    def set_end_time(self):
-        self.end_time = Utils.get_timestamp_millis()
+    def __save_solution(self):
+        solution = AlgorithmSolution(self.colours, self.run_time, self.total_distance)
+        self.solutions.append(solution)
 
 
 class GreedyConstructive(Algorithm):
@@ -85,7 +122,7 @@ class GreedyConstructive(Algorithm):
         self.distance_method = distance_method
 
     def find_solution(self):
-        colours = copy.deepcopy(self.colours_list)
+        colours = copy.deepcopy(self.colours)
         solution = ColoursList()
         # Get a random colour
         current_colour = colours.pop_random()
@@ -98,22 +135,23 @@ class GreedyConstructive(Algorithm):
             solution.append(current_colour)
             del colours[current_colour]
 
-        self.solution = solution
+        self.solutions.append(solution)
 
 
 class HillClimbing(Algorithm):
-    solution: ColoursList
     temp_solution: ColoursList
 
     def __init__(self, iterations: int = 1):
         super(HillClimbing, self).__init__()
         self.iterations = iterations
+        self.best_solution = None
         self.temp_solution = None
 
     def load_colours_list(self, colours_list: ColoursList):
         super(HillClimbing, self).load_colours_list(colours_list)
-        self.solution = self.__get_random_permutation()
-        self.temp_solution = self.solution.clone()
+
+        # Get a random permutation as best first solution
+        self.best_solution = self.__get_random_permutation()
 
     @staticmethod
     def __invert_range(colours_list: ColoursList, start, end):
@@ -144,15 +182,17 @@ class HillClimbing(Algorithm):
         return index1, index2
 
     def __get_random_permutation(self):
-        return self.colours_list.random_permutation(len(self.colours_list))
+        return self.colours.random_permutation(len(self.colours))
 
     def find_solution(self):
+        # TODO: Working, but replaced with else
+        # # Go back to original state
+        # self.temp_solution = self.best_solution.clone()
+
+        self.temp_solution = self.best_solution.clone()
         best_solution_distance = self.temp_solution.get_total_distance()
 
         for i in range(self.iterations):
-            # Go back to original state
-            self.temp_solution = self.solution.clone()
-
             index1, index2 = self.__get_random_indexes()
             self.__swap_colours(index1, index2)
 
@@ -161,8 +201,11 @@ class HillClimbing(Algorithm):
                 if self.debug:
                     print("Better solution found!")
                     print(f"Previous distance: {best_solution_distance} - New distance: {current_solution_distance}")
-                self.solution = self.temp_solution.clone()
+                self.solutions.append(self.temp_solution.clone())
                 best_solution_distance = current_solution_distance
+            else:
+                # Not improving; go back to previous state
+                self.temp_solution = self.best_solution.clone()
 
 
 class MultiStartHillClimbing(Algorithm):
@@ -173,14 +216,10 @@ class MultiStartHillClimbing(Algorithm):
 
     def find_solution(self):
         algorithm = Algorithm.factory(AlgorithmType.HILL_CLIMBING, self.hill_climbing_iterations)
-        algorithm.load_colours_list(self.colours_list)
-        solutions = []
+        algorithm.load_colours_list(self.colours)
         for i in range(self.starts):
             algorithm.find_solution()
-            solutions.append(algorithm.get_solution())
-
-        solutions = sorted(solutions, key=lambda sol: sol.get_total_distance())
-        self.solution = solutions[0]
+            self.solutions.append(algorithm.get_best_solution())
 
 
 class CustomAlgorithm(Algorithm):
@@ -189,6 +228,6 @@ class CustomAlgorithm(Algorithm):
 
     def find_solution(self):
         algo2 = Algorithm.factory(AlgorithmType.GREEDY_CONSTRUCTIVE, GreedyConstructive.DistanceMethod.DELTA_E)
-        algo2.load_colours_list(self.colours_list)
+        algo2.load_colours_list(self.colours)
         algo2.find_solution()
-        self.solution = algo2.get_solution()
+        self.solutions.append(algo2.get_best_solution())

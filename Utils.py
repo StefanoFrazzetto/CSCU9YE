@@ -73,10 +73,9 @@ def plot_colours_improved(colours: ColoursList, algorithm: Algorithm = None):
     axes.axis('off')
 
     if algorithm is not None:
-        plt.text(0, 18, f"Algorithm: {algorithm.get_algorithm_name()}")
-        plt.text(0, 20, f"Running time: {algorithm.get_time_performance()} s")
+        plt.text(0, 18*4, f"Algorithm: {algorithm.get_algorithm_name()}")
     formatted_distance = "{0:.2f}".format(colours.get_total_distance())
-    plt.text(0, 22, f"Total distance (euclidean): {formatted_distance}")
+    plt.text(0, 22*4, f"Total distance (euclidean): {formatted_distance}")
     plt.show()
 
 
