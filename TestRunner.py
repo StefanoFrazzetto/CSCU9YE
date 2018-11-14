@@ -105,7 +105,7 @@ class TestRunner(object):
         starting_subsets = []
         for benchmark in self.benchmarks:
             if len(benchmark.colours) not in starting_subsets:
-                # Plot the starting colours once for each subset size
+                # Plot the starting colours once for each colour subset
                 starting_subsets.append(len(benchmark.colours))
                 Plot.colours(
                     benchmark.colours.get_all(),
