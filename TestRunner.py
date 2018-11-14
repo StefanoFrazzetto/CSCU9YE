@@ -118,5 +118,5 @@ class TestRunner(object):
         print("Plotting results...")
 
         for benchmark in self.benchmarks:
-            Utils.plot_colours_improved(benchmark.colours)
+            Utils.plot_colours(benchmark.colours)
             Utils.plot_algorithm_solution(benchmark.algorithm)

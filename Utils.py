@@ -14,6 +14,8 @@ def get_timestamp_millis():
 
 
 def millis_to_seconds(time1, time2):
+    if time1 < time2:
+        time1, time2 = time2, time1
     return (time1 - time2) / 1000
 
 
@@ -40,29 +42,11 @@ def read_file(fname):
     return n, colours
 
 
-# Display the colours in the order of the permutation in a pyplot window
-# Input, list of colours, and ordering  of colours.
-# They need to be of the same length
-
-def plot_colours(colours, perm):
-    assert len(colours) == len(perm)
-
-    ratio = 10  # ratio of line height/width, e.g. colour lines will have height 10 and width 1
-    img = np.zeros((ratio, len(colours), 3))
-    for i in range(0, len(colours)):
-        img[:, i, :] = colours[perm[i]]
-
-    fig, axes = plt.subplots(1, figsize=(8, 4))  # figsize=(width,height) handles window dimensions
-    axes.imshow(img, interpolation='nearest')
-    axes.axis('off')
-    plt.show()
+def plot_algorithm_solution(algorithm: Algorithm):
+    plot_colours(algorithm.get_best_solution().colours, algorithm)
 
 
-def plot_from_algorithm(algorithm: Algorithm):
-    plot_colours_improved(algorithm.get_best_solution().colours, algorithm)
-
-
-def plot_colours_improved(colours: ColoursList, algorithm: Algorithm = None):
+def plot_colours(colours: ColoursList, algorithm: Algorithm = None):
     ratio = 10  # ratio of line height/width, e.g. colour lines will have height 10 and width 1
     img = np.zeros((ratio, len(colours), 3))
     for i in range(len(colours)):
