@@ -4,7 +4,7 @@ from typing import Dict, List
 
 import numpy as np
 
-from Algorithms import Algorithm, AlgorithmType
+from Algorithms import Algorithm, AlgorithmType, AlgorithmSolution
 from Colour import ColoursList, ColourUtils
 from Utils import Assert, Time, Plot
 
@@ -23,37 +23,41 @@ class Benchmark(threading.Thread):
         self.test_results = []  # the results for each run
         self.iterations = iterations  # number of times to run
 
-    def run(self):
-        self.algorithm.load_colours_list(self.colours)
-        self.algorithm.run(self.iterations)
-        self.test_results.append(TestResult.from_algorithm(self.algorithm))
-
     def get_statistics(self):
         Assert.not_empty(self.test_results, "No results to generate statistics for.")
         distances = [result.best_distance for result in self.test_results]
-        return np.mean(distances), np.mean(distances), np.std(distances)
+        return np.mean(distances), np.median(distances), np.std(distances)
+
+    def __save_results(self):
+        print(f"Found {len(self.algorithm.get_solutions())} solutions for {self.algorithm.get_algorithm_name()}")
+        for solution in self.algorithm.get_solutions():
+            self.test_results.append(TestResult.from_solution(solution))
+
+    def run(self):
+        self.algorithm.load_colours_list(self.colours)
+        self.algorithm.run(self.iterations)
+        self.__save_results()
 
 
 @total_ordering
 class TestResult(object):
     def __init__(self):
         self.subset_size = 0
-        self.total_run_time = 0
         self.best_distance = 0
 
     def __eq__(self, other: 'TestResult'):
         return self.subset_size == other.subset_size and \
-               self.total_run_time == other.total_run_time and \
                self.best_distance == other.best_distance
 
     def __lt__(self, other: 'TestResult'):
         return self.best_distance < other.best_distance
 
     @staticmethod
-    def from_algorithm(algorithm: Algorithm):
+    def from_solution(solution: AlgorithmSolution):
         tr = TestResult()
-        tr.total_run_time = algorithm.get_run_time()
-        tr.best_distance = algorithm.get_best_solution().total_distance
+        tr.subset_size = len(solution.get_colours())
+        tr.best_distance = solution.get_total_distance()
+        return tr
 
 
 class TestRunConfiguration(object):
@@ -119,14 +123,7 @@ class TestRunner(object):
                 benchmark.algorithm.get_run_time()
             )
 
-    def run(self):
-        """
-        Run all the benchmarks using the provided test run configurations.
-        """
-        Assert.not_empty(self.benchmarks, "The benchmarks list cannot be empty. Please add run configurations.")
-
-        timestamp_start = Time.get_timestamp_millis()
-
+    def __start_benchmarks(self):
         # Start all the benchmarks in parallel
         for benchmark in self.benchmarks:
             print(f"Starting benchmark for {benchmark.algorithm.get_algorithm_name()}")
@@ -137,6 +134,14 @@ class TestRunner(object):
         for thread in self.threads:
             thread.join()
 
+    def run(self):
+        """
+        Run all the benchmarks using the provided test run configurations.
+        """
+        Assert.not_empty(self.benchmarks, "The benchmarks list cannot be empty. Please add run configurations.")
+
+        timestamp_start = Time.get_timestamp_millis()
+        self.__start_benchmarks()
         timestamp_end = Time.get_timestamp_millis()
         running_time = Time.millis_to_seconds(timestamp_end, timestamp_start)
         print(f"All threads finished in {running_time} s")
@@ -145,4 +150,4 @@ class TestRunner(object):
 
     def get_statistics(self):
         for benchmark in self.benchmarks:
-            benchmark.get_statistics()
+            print(benchmark.get_statistics())
