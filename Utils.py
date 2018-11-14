@@ -78,9 +78,10 @@ def plot_colours_improved(colours: ColoursList, algorithm: Algorithm = None):
     line3_y = 22 * line_y_coefficient
 
     if algorithm is not None:
-        plt.text(0, line1_y, f"Algorithm: {algorithm.get_algorithm_name()}")
+        plt.text(0, line2_y, f"Algorithm: {algorithm.get_algorithm_name()}")
     formatted_distance = "{0:.2f}".format(colours.get_total_distance())
-    plt.text(0, line2_y, f"Total distance (euclidean): {formatted_distance}")
+    plt.text(0, line1_y, f"Colours subset size: {len(colours)}")
+    plt.text(0, line3_y, f"Total distance (euclidean): {formatted_distance}")
     plt.show()
 
 
