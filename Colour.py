@@ -76,6 +76,7 @@ class ColoursList(object):
     # BUILT-IN METHODS
     def __init__(self):
         self.colours = []
+        self.total_distance = None
 
     def __contains__(self, item):
         for element in self.colours:
@@ -104,7 +105,7 @@ class ColoursList(object):
 
     def __str__(self):
         for colour in self.get_all():
-            print(colour)
+            return colour
 
     # PRIVATE METHODS
 
@@ -158,10 +159,13 @@ class ColoursList(object):
         return nearest_colour, total_distance
 
     def get_total_distance(self) -> float:
-        total = 0
+        if self.total_distance is not None:
+            return self.total_distance
+
+        self.total_distance = 0
         for i in range(len(self) - 1):
-            total += self.get(i).distance_from(self.get(i + 1))
-        return total
+            self.total_distance += self.get(i).distance_from(self.get(i + 1))
+        return self.total_distance
 
     def index(self, element):
         return self.colours.index(element)
@@ -174,12 +178,11 @@ class ColoursList(object):
     def random_permutation(self, size) -> 'ColoursList':
         new_list = ColoursList()
         permutation = Utils.get_permutation(size)
-        for i in range(len(self)):
-            new_list.append(self.get(permutation[i]))
+        for i in range(size):
+            permutation_element = permutation[i]
+            colour = self.get(permutation_element)
+            new_list.append(colour)
         return new_list
-
-    def random_sample(self, elements) -> List[Colour]:
-        return random.sample(self.colours, elements)
 
     def slice(self, start_index: int = 0, end_index: int = None):
         """Return a slice of the list"""

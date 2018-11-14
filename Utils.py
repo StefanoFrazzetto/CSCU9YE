@@ -59,7 +59,7 @@ def plot_colours(colours, perm):
 
 
 def plot_from_algorithm(algorithm: Algorithm):
-    plot_colours_improved(algorithm.get_solution(), algorithm)
+    plot_colours_improved(algorithm.get_best_solution().colours, algorithm)
 
 
 def plot_colours_improved(colours: ColoursList, algorithm: Algorithm = None):
@@ -72,10 +72,15 @@ def plot_colours_improved(colours: ColoursList, algorithm: Algorithm = None):
     axes.imshow(img, interpolation='nearest')
     axes.axis('off')
 
+    line_y_coefficient = (len(colours) / 100)
+    line1_y = 18 * line_y_coefficient
+    line2_y = 20 * line_y_coefficient
+    line3_y = 22 * line_y_coefficient
+
     if algorithm is not None:
-        plt.text(0, 18*4, f"Algorithm: {algorithm.get_algorithm_name()}")
+        plt.text(0, line1_y, f"Algorithm: {algorithm.get_algorithm_name()}")
     formatted_distance = "{0:.2f}".format(colours.get_total_distance())
-    plt.text(0, 22*4, f"Total distance (euclidean): {formatted_distance}")
+    plt.text(0, line2_y, f"Total distance (euclidean): {formatted_distance}")
     plt.show()
 
 
