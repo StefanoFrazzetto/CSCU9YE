@@ -29,6 +29,7 @@ class Benchmark(threading.Thread):
         self.test_results.append(TestResult.from_algorithm(self.algorithm))
 
     def get_statistics(self):
+        Assert.not_empty(self.test_results, "No results to generate statistics for.")
         distances = [result.best_distance for result in self.test_results]
         return np.mean(distances), np.mean(distances), np.std(distances)
 
