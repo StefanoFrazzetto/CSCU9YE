@@ -5,6 +5,7 @@ from functools import total_ordering
 from typing import List
 
 import Utils
+from CheckingUtils import Assert
 from Colour import ColoursList
 
 
@@ -81,7 +82,7 @@ class Algorithm(metaclass=abc.ABCMeta):
         return self.__class__.__name__
 
     def get_solutions(self) -> List[AlgorithmSolution]:
-        assert len(self.solutions) != 0, "No solutions have been found yet."
+        Assert.not_empty(self.solutions, "No solutions have been found yet.")
         sorted(self.solutions)
         return self.solutions
 

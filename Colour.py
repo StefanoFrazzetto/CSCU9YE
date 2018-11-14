@@ -11,6 +11,7 @@ from colormath.color_diff import delta_e_cie2000
 from colormath.color_objects import sRGBColor, LabColor
 
 import Utils
+from CheckingUtils import Assert
 
 
 @total_ordering
@@ -122,7 +123,7 @@ class ColoursList(object):
         return colours
 
     def get(self, index: int):
-        assert index is not None
+        Assert.not_none(index)
         return self.colours[index]
 
     def get_all(self) -> list:

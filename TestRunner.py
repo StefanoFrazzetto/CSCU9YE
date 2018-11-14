@@ -4,6 +4,7 @@ from typing import Dict
 import numpy as np
 
 from Algorithms import *
+from CheckingUtils import Assert
 from Colour import ColoursList
 
 
@@ -60,6 +61,11 @@ class TestRunConfiguration(object):
 
 
 class TestRunner(object):
+    """
+    TestRunner handles the benchmarking process for the chosen algorithms.
+    It creates a new Benchmark for each test to be run, and runs each one
+    of them using a separate thread.
+    """
     algorithm_types: Dict[AlgorithmType, Algorithm]
     benchmarks: List[Benchmark]
     test_run_configurations: List[TestRunConfiguration]
@@ -70,10 +76,15 @@ class TestRunner(object):
         self.threads = []
         self.benchmarks = []
 
-        # self.algorithm_types = [algorithm for algorithm in AlgorithmType]
-        self.algorithm_types = [AlgorithmType.HILL_CLIMBING]
+        self.algorithm_types = [algorithm for algorithm in AlgorithmType]
+        # self.algorithm_types = [AlgorithmType.HILL_CLIMBING]
 
     def add_run_configuration(self, subset_size: int, iterations: int):
+        """
+        Add a new test run configuration.
+        :param subset_size: the size of the subset of colours to use.
+        :param iterations: the number of times the algorithm has to be run.
+        """
         trc = TestRunConfiguration(subset_size, iterations)
         self.test_run_configurations.append(trc)
 
@@ -84,6 +95,13 @@ class TestRunner(object):
                 self.benchmarks.append(benchmark)
 
     def run(self):
+        """
+        Run all the benchmarks using the provided test run configurations.
+        """
+        Assert.not_empty(self.benchmarks, "The benchmarks list cannot be empty. Please add run configurations.")
+
+        timestamp_start = Utils.get_timestamp_millis()
+
         # Start all the benchmarks in parallel
         for benchmark in self.benchmarks:
             print(f"Starting benchmark for {benchmark.algorithm.get_algorithm_name()}")
@@ -94,8 +112,11 @@ class TestRunner(object):
         for thread in self.threads:
             thread.join()
 
-        print("All threads finished. Plotting results...")
+        timestamp_end = Utils.get_timestamp_millis()
+        running_time = Utils.millis_to_seconds(timestamp_end, timestamp_start)
+        print(f"All threads finished in {running_time}")
+        print("Plotting results...")
 
         for benchmark in self.benchmarks:
             Utils.plot_colours_improved(benchmark.colours)
-            Utils.plot_from_algorithm(benchmark.algorithm)
+            Utils.plot_algorithm_solution(benchmark.algorithm)
