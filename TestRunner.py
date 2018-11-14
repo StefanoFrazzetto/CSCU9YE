@@ -70,11 +70,11 @@ class TestRunner(object):
     """
     algorithm_types: Dict[AlgorithmType, Algorithm]
     benchmarks: List[Benchmark]
-    test_run_configurations: List[TestRunConfiguration]
+    run_configurations: List[TestRunConfiguration]
 
     def __init__(self, colours: list):
         self.colours = ColourUtils.list_from_tuple_list(colours)
-        self.test_run_configurations = []
+        self.run_configurations = []
         self.threads = []
         self.benchmarks = []
 
@@ -88,16 +88,36 @@ class TestRunner(object):
         :param iterations: the number of times the algorithm has to be run.
         """
         trc = TestRunConfiguration(subset_size, iterations)
-        self.test_run_configurations.append(trc)
+        self.run_configurations.append(trc)
 
     def configure(self):
-        for test_run in self.test_run_configurations:
+        for test_run in self.run_configurations:
             for algorithm_type in self.algorithm_types:
                 benchmark = Benchmark(algorithm_type, self.colours, test_run.subset_size, test_run.iterations)
                 self.benchmarks.append(benchmark)
 
     # def __generate_results(self):
     #     Salve results to test_results
+
+    def __plot_benchmarks(self):
+        print("Plotting results...")
+
+        starting_subsets = []
+        for benchmark in self.benchmarks:
+            if len(benchmark.colours) not in starting_subsets:
+                # Plot the starting colours once for each subset size
+                starting_subsets.append(len(benchmark.colours))
+                Plot.colours(
+                    benchmark.colours.get_all(),
+                    benchmark.colours.get_total_distance()
+                )
+
+            Plot.colours(
+                benchmark.algorithm.get_best_solution().get_colours(),
+                benchmark.algorithm.get_best_solution().get_total_distance(),
+                benchmark.algorithm.get_algorithm_name(),
+                benchmark.algorithm.get_run_time()
+            )
 
     def run(self):
         """
@@ -120,19 +140,8 @@ class TestRunner(object):
         timestamp_end = Time.get_timestamp_millis()
         running_time = Time.millis_to_seconds(timestamp_end, timestamp_start)
         print(f"All threads finished in {running_time} s")
-        print("Plotting results...")
 
-        for benchmark in self.benchmarks:
-            Plot.colours(
-                benchmark.colours.get_all(),
-                benchmark.colours.get_total_distance()
-            )
-            Plot.colours(
-                benchmark.algorithm.get_best_solution().get_colours(),
-                benchmark.algorithm.get_best_solution().get_total_distance(),
-                benchmark.algorithm.get_algorithm_name(),
-                benchmark.algorithm.get_run_time()
-            )
+        self.__plot_benchmarks()
 
     def get_statistics(self):
         for benchmark in self.benchmarks:
