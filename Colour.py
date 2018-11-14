@@ -1,6 +1,5 @@
 import copy
 import random
-from _ctypes import Union
 from functools import total_ordering
 from math import inf
 from typing import List
@@ -10,7 +9,6 @@ from colormath.color_conversions import convert_color
 from colormath.color_diff import delta_e_cie2000
 from colormath.color_objects import sRGBColor, LabColor
 
-import Utils
 from Utils import Assert
 
 
@@ -178,7 +176,7 @@ class ColoursList(object):
 
     def random_permutation(self, size) -> 'ColoursList':
         new_list = ColoursList()
-        permutation = Utils.get_permutation(size)
+        permutation = ColourUtils.get_permutation(size)
         for i in range(size):
             permutation_element = permutation[i]
             colour = self.get(permutation_element)
@@ -218,3 +216,7 @@ class ColourUtils:
         for i in range(len(colours_list) - 1):
             total += Colour.calculate_distance(colours_list[i], colours_list[i + 1])
         return total
+
+    @staticmethod
+    def get_permutation(size: int):
+        return random.sample(range(size), size)

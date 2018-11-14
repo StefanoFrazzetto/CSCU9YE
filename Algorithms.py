@@ -4,9 +4,8 @@ from enum import Enum
 from functools import total_ordering
 from typing import List
 
-import Utils
-from Utils import Assert
 from Colour import ColoursList
+from Utils import Time, Assert
 
 
 class AlgorithmType(Enum):
@@ -29,11 +28,17 @@ class AlgorithmSolution(object):
         self.total_distance = colours.get_total_distance() if total_distance is None else total_distance
 
     def __eq__(self, other: 'AlgorithmSolution'):
-        return self.colours == other.colours and \
-               self.total_distance == other.total_distance
+        return self.get_colours() == other.get_colours() and \
+               self.get_total_distance() == other.get_total_distance()
 
     def __lt__(self, other: 'AlgorithmSolution'):
-        return self.total_distance < other.total_distance
+        return self.get_total_distance() < other.get_total_distance()
+
+    def get_colours(self):
+        return self.colours
+
+    def get_total_distance(self):
+        return self.total_distance
 
 
 class Algorithm(metaclass=abc.ABCMeta):
@@ -94,7 +99,7 @@ class Algorithm(metaclass=abc.ABCMeta):
         Get the running time by subtracting end time from start time.
         :return: the algorithm running time in microseconds.
         """
-        seconds = Utils.millis_to_seconds(self.__end_time, self.__start_time)
+        seconds = Time.millis_to_seconds(self.__end_time, self.__start_time)
         return float("{0:.2f}".format(seconds))
 
     def load_colours_list(self, colours_list: ColoursList):
@@ -102,10 +107,10 @@ class Algorithm(metaclass=abc.ABCMeta):
 
     def run(self, iterations: int):
         self.iterations = iterations
-        self.__start_time = Utils.get_timestamp_millis()
+        self.__start_time = Time.get_timestamp_millis()
         for _ in range(self.iterations):
             self.find_solution()
-        self.__end_time = Utils.get_timestamp_millis()
+        self.__end_time = Time.get_timestamp_millis()
         self.run_time = self.get_run_time()
 
     def save_solution(self, solution: ColoursList or AlgorithmSolution):

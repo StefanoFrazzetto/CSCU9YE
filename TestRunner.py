@@ -1,11 +1,12 @@
 import threading
-from typing import Dict
+from functools import total_ordering
+from typing import Dict, List
 
 import numpy as np
 
-from Algorithms import *
-from Utils import Assert
-from Colour import ColoursList
+from Algorithms import Algorithm, AlgorithmType
+from Colour import ColoursList, ColourUtils
+from Utils import Assert, Time, Plot
 
 
 class Benchmark(threading.Thread):
@@ -70,8 +71,8 @@ class TestRunner(object):
     benchmarks: List[Benchmark]
     test_run_configurations: List[TestRunConfiguration]
 
-    def __init__(self, colours: ColoursList):
-        self.colours = colours
+    def __init__(self, colours: list):
+        self.colours = ColourUtils.list_from_tuple_list(colours)
         self.test_run_configurations = []
         self.threads = []
         self.benchmarks = []
@@ -94,13 +95,16 @@ class TestRunner(object):
                 benchmark = Benchmark(algorithm_type, self.colours, test_run.subset_size, test_run.iterations)
                 self.benchmarks.append(benchmark)
 
+    # def __generate_results(self):
+    #     Salve results to test_results
+
     def run(self):
         """
         Run all the benchmarks using the provided test run configurations.
         """
         Assert.not_empty(self.benchmarks, "The benchmarks list cannot be empty. Please add run configurations.")
 
-        timestamp_start = Utils.get_timestamp_millis()
+        timestamp_start = Time.get_timestamp_millis()
 
         # Start all the benchmarks in parallel
         for benchmark in self.benchmarks:
@@ -112,11 +116,23 @@ class TestRunner(object):
         for thread in self.threads:
             thread.join()
 
-        timestamp_end = Utils.get_timestamp_millis()
-        running_time = Utils.millis_to_seconds(timestamp_end, timestamp_start)
-        print(f"All threads finished in {running_time}")
+        timestamp_end = Time.get_timestamp_millis()
+        running_time = Time.millis_to_seconds(timestamp_end, timestamp_start)
+        print(f"All threads finished in {running_time} s")
         print("Plotting results...")
 
         for benchmark in self.benchmarks:
-            Utils.plot_colours(benchmark.colours)
-            Utils.plot_algorithm_solution(benchmark.algorithm)
+            Plot.colours(
+                benchmark.colours.get_all(),
+                benchmark.colours.get_total_distance()
+            )
+            Plot.colours(
+                benchmark.algorithm.get_best_solution().get_colours(),
+                benchmark.algorithm.get_best_solution().get_total_distance(),
+                benchmark.algorithm.get_algorithm_name(),
+                benchmark.algorithm.get_run_time()
+            )
+
+    def get_statistics(self):
+        for benchmark in self.benchmarks:
+            benchmark.get_statistics()
