@@ -4,7 +4,7 @@ from typing import Dict
 import numpy as np
 
 from Algorithms import *
-from CheckingUtils import Assert
+from Utils import Assert
 from Colour import ColoursList
 
 

@@ -11,7 +11,7 @@ from colormath.color_diff import delta_e_cie2000
 from colormath.color_objects import sRGBColor, LabColor
 
 import Utils
-from CheckingUtils import Assert
+from Utils import Assert
 
 
 @total_ordering

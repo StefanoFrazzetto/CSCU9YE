@@ -6,6 +6,22 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from Algorithms import Algorithm
+
+
+class Assert(object):
+    @staticmethod
+    def not_empty(obj: list, message: str = None):
+        assert len(obj) > 0, "The list is empty." if message is None else message
+
+    @staticmethod
+    def not_none(obj, message: str = None):
+        assert obj is not None, "The object value is None." if message is None else message
+
+    @staticmethod
+    def same_length(obj1, obj2, message: str = None):
+        assert len(obj1) == len(obj2), "The objects have different lengths" if message is None else message
+
+
 from Colour import ColoursList
 
 
@@ -23,12 +39,12 @@ def get_current_dir():
     return os.path.dirname(os.path.realpath(__file__))
 
 
+# Reads the file  of colours
+# Returns the number of colours in the file and a list with the colours (RGB) values
+
 def change_dir(path):
     os.chdir(path)
 
-
-# Reads the file  of colours
-# Returns the number of colours in the file and a list with the colours (RGB) values
 
 def read_file(fname):
     with open(fname, 'r') as afile:
@@ -60,11 +76,13 @@ def plot_colours(colours: ColoursList, algorithm: Algorithm = None):
     line1_y = 18 * line_y_coefficient
     line2_y = 20 * line_y_coefficient
     line3_y = 22 * line_y_coefficient
+    line4_y = 24 * line_y_coefficient
 
-    if algorithm is not None:
-        plt.text(0, line2_y, f"Algorithm: {algorithm.get_algorithm_name()}")
     formatted_distance = "{0:.2f}".format(colours.get_total_distance())
     plt.text(0, line1_y, f"Colours subset size: {len(colours)}")
+    if algorithm is not None:
+        plt.text(0, line2_y, f"Algorithm: {algorithm.get_algorithm_name()}")
+        plt.text(0, line4_y, f"Algorithm running time: {algorithm.get_run_time()}")
     plt.text(0, line3_y, f"Total distance (euclidean): {formatted_distance}")
     plt.show()
 

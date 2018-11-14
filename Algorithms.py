@@ -5,7 +5,7 @@ from functools import total_ordering
 from typing import List
 
 import Utils
-from CheckingUtils import Assert
+from Utils import Assert
 from Colour import ColoursList
 
 
