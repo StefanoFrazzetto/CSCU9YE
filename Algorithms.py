@@ -200,7 +200,7 @@ class HillClimbing(Algorithm):
                 self.is_initialized = True
 
             index1, index2 = self.__get_random_indexes(self.best_solution)
-            self.__swap_colours(self.temp_solution, index1, index2)
+            self.__invert_range(self.temp_solution, index1, index2)
             temp_solution_distance = self.temp_solution.get_total_distance()
 
             if self.temp_solution.get_total_distance() < self.best_solution_distance:
