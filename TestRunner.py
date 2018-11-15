@@ -1,6 +1,6 @@
 import threading
 from functools import total_ordering
-from typing import Dict, List
+from typing import List
 
 import numpy as np
 
@@ -17,8 +17,9 @@ class Benchmark(threading.Thread):
     colours: ColoursList
 
     def __init__(self, algorithm_type: AlgorithmType, colours: ColoursList, subset_size: int, iterations: int):
-        threading.Thread.__init__(self)
+        super().__init__()
         self.algorithm = Algorithm.factory(algorithm_type)  # the algorithm to run
+        self.subset_size = subset_size
         self.colours = colours.random_permutation(subset_size)  # the colours to use to run the benchmark
         self.test_results = []  # the results for each run
         self.iterations = iterations  # number of times to run
@@ -29,7 +30,6 @@ class Benchmark(threading.Thread):
         return np.mean(distances), np.median(distances), np.std(distances)
 
     def __save_results(self):
-        print(f"Found {len(self.algorithm.get_solutions())} solutions for {self.algorithm.get_algorithm_name()}")
         for solution in self.algorithm.get_solutions():
             self.test_results.append(TestResult.from_solution(solution))
 
@@ -37,6 +37,14 @@ class Benchmark(threading.Thread):
         self.algorithm.load_colours_list(self.colours)
         self.algorithm.run(self.iterations)
         self.__save_results()
+
+    def plot(self):
+        Plot.colours(
+            self.algorithm.get_best_solution().get_colours(),
+            self.algorithm.get_best_solution().get_total_distance(),
+            self.algorithm.get_algorithm_name(),
+            self.algorithm.get_run_time()
+        )
 
 
 @total_ordering
@@ -61,7 +69,8 @@ class TestResult(object):
 
 
 class TestRunConfiguration(object):
-    def __init__(self, subset_size: int, iterations: int = 1):
+    def __init__(self, algorithm_type: AlgorithmType, subset_size: int, iterations: int = 1):
+        self.algorithm_type = algorithm_type
         self.subset_size = subset_size
         self.iterations = iterations
 
@@ -72,7 +81,6 @@ class TestRunner(object):
     It creates a new Benchmark for each test to be run, and runs each one
     of them using a separate thread.
     """
-    algorithm_types: Dict[AlgorithmType, Algorithm]
     benchmarks: List[Benchmark]
     run_configurations: List[TestRunConfiguration]
 
@@ -82,33 +90,27 @@ class TestRunner(object):
         self.threads = []
         self.benchmarks = []
 
-        self.algorithm_types = [algorithm for algorithm in AlgorithmType]
-        # self.algorithm_types = [AlgorithmType.HILL_CLIMBING]
-
-    def add_run_configuration(self, subset_size: int, iterations: int):
+    def add_run_configuration(self, algorithm_type: AlgorithmType, subset_size: int, iterations: int):
         """
         Add a new test run configuration.
+        :param algorithm_type: the algorithm to be tested.
         :param subset_size: the size of the subset of colours to use.
         :param iterations: the number of times the algorithm has to be run.
         """
-        trc = TestRunConfiguration(subset_size, iterations)
+        trc = TestRunConfiguration(algorithm_type, subset_size, iterations)
         self.run_configurations.append(trc)
 
     def configure(self):
         for test_run in self.run_configurations:
-            for algorithm_type in self.algorithm_types:
-                benchmark = Benchmark(algorithm_type, self.colours, test_run.subset_size, test_run.iterations)
-                self.benchmarks.append(benchmark)
-
-    # def __generate_results(self):
-    #     Salve results to test_results
+            benchmark = Benchmark(test_run.algorithm_type, self.colours, test_run.subset_size, test_run.iterations)
+            self.benchmarks.append(benchmark)
 
     def __plot_benchmarks(self):
         print("Plotting results...")
 
         starting_subsets = []
         for benchmark in self.benchmarks:
-            if len(benchmark.colours) not in starting_subsets:
+            if benchmark.subset_size not in starting_subsets:
                 # Plot the starting colours once for each colour subset
                 starting_subsets.append(len(benchmark.colours))
                 Plot.colours(
@@ -116,12 +118,7 @@ class TestRunner(object):
                     benchmark.colours.get_total_distance()
                 )
 
-            Plot.colours(
-                benchmark.algorithm.get_best_solution().get_colours(),
-                benchmark.algorithm.get_best_solution().get_total_distance(),
-                benchmark.algorithm.get_algorithm_name(),
-                benchmark.algorithm.get_run_time()
-            )
+            benchmark.plot()
 
     def __start_benchmarks(self):
         # Start all the benchmarks in parallel
@@ -148,6 +145,5 @@ class TestRunner(object):
 
         self.__plot_benchmarks()
 
-    def get_statistics(self):
-        for benchmark in self.benchmarks:
-            print(benchmark.get_statistics())
+    def get_benchmarks(self):
+        return self.benchmarks

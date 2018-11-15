@@ -3,6 +3,7 @@ import time
 
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.figure import Figure
 
 
 class Assert:
@@ -58,6 +59,10 @@ class File:
 
 class Plot:
     @staticmethod
+    def __save_plot(figure: Figure, filename: str, subset_size: int):
+        figure.savefig(f"./results/{filename}_{subset_size}", bbox_inches='tight')
+
+    @staticmethod
     def colours(colours: list, total_distance: float = None, algorithm_name: str = None, run_time: float = None):
         ratio = 10  # ratio of line height/width, e.g. colour lines will have height 10 and width 1
         img = np.zeros((ratio, len(colours), 3))
@@ -85,4 +90,4 @@ class Plot:
         if run_time is not None:
             plt.text(0, line4_y, f"Algorithm running time: {run_time} s")
 
-        plt.show()
+        Plot.__save_plot(fig, algorithm_name if algorithm_name is not None else "Subset", len(colours))
