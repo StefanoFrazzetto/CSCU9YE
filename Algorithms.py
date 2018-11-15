@@ -45,7 +45,7 @@ class Algorithm(metaclass=abc.ABCMeta):
     colours: ColoursList
     solutions: List[AlgorithmSolution]
 
-    HILL_CLIMBING_ITERATIONS = 1000
+    HILL_CLIMBING_ITERATIONS = 500
 
     def __init__(self, *args):
         self.colours = ColoursList()
