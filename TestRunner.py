@@ -24,10 +24,12 @@ class Benchmark(threading.Thread):
         self.test_results = []  # the results for each run
         self.iterations = iterations  # number of times to run
 
-    def get_statistics(self):
+    def get_distances(self):
         Assert.not_empty(self.test_results, "No results to generate statistics for.")
-        distances = [result.best_distance for result in self.test_results]
-        return np.mean(distances), np.median(distances), np.std(distances)
+        return [result.best_distance for result in self.test_results]
+
+    def get_total_time(self):
+        return self.algorithm.get_run_time()
 
     def __save_results(self):
         for solution in self.algorithm.get_solutions():
@@ -38,12 +40,20 @@ class Benchmark(threading.Thread):
         self.algorithm.run(self.iterations)
         self.__save_results()
 
-    def plot(self):
+    def plot_colours(self):
         Plot.colours(
             self.algorithm.get_best_solution().get_colours(),
             self.algorithm.get_best_solution().get_total_distance(),
             self.algorithm.get_algorithm_name(),
             self.algorithm.get_run_time()
+        )
+
+    def plot_distances(self):
+        Plot.distances(
+            self.algorithm.get_algorithm_name(),
+            self.get_distances(),
+            self.subset_size,
+            self.iterations
         )
 
 
@@ -118,7 +128,7 @@ class TestRunner(object):
                     benchmark.colours.get_total_distance()
                 )
 
-            benchmark.plot()
+            benchmark.plot_colours()
 
     def __start_benchmarks(self):
         # Start all the benchmarks in parallel

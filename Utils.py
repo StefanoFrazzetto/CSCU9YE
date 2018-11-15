@@ -91,3 +91,41 @@ class Plot:
             plt.text(0, line4_y, f"Algorithm running time: {run_time} s")
 
         Plot.__save_plot(fig, algorithm_name if algorithm_name is not None else "Subset", len(colours))
+
+    @staticmethod
+    def times(times: list, colours: int, iterations: int):
+        fig = plt.figure(1, figsize=(9, 6))
+        ax = fig.add_subplot(120)
+        # Create the boxplot
+        bp = ax.boxplot(times, labels=None)
+        ax.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=0.5)
+        ax.set_ylabel('Execution time ($s$)')
+
+        top_title = f"Algorithms execution time: {colours} colours - {iterations} iterations."
+        ax.set_title('Algorithms execution time for %d iterations' % len(times[0]))
+
+        Plot.__save_plot(fig, "Boxplot_benchmark", colours)
+
+    @staticmethod
+    def distances(algorithm: str, distances: list, colours: int, iterations: int):
+        fig = plt.figure(1, figsize=(8, 4))
+
+        # Create box with values
+        ax = fig.add_subplot(111)  # rows, cols, num
+
+        mean = np.mean(distances)
+        median = np.median(distances)
+        std = np.std(distances)
+
+        ax_text = '\n'.join((r'Mean=%.2f' % (mean,), r'Median=%.2f' % (median,), r'STD=%.2f' % (std,)))
+        props = dict(boxstyle='square', facecolor='grey', alpha=0.5)
+        ax.text(0.75, 0.25, ax_text, transform=ax.transAxes, fontsize=14, verticalalignment='top', bbox=props)
+
+        ax.boxplot(distances, showmeans=True)
+        ax.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=0.5)
+        ax.set_ylabel('Total distance')
+
+        top_title = f"{algorithm} values: {colours} colours - {iterations} iterations."
+        ax.set_title(top_title)
+
+        Plot.__save_plot(fig, f"{algorithm}_distances", colours)
