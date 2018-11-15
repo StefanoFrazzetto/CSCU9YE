@@ -2,8 +2,6 @@ import threading
 from functools import total_ordering
 from typing import List
 
-import numpy as np
-
 from Algorithms import Algorithm, AlgorithmType, AlgorithmSolution
 from Colour import ColoursList, ColourUtils
 from Utils import Assert, Time, Plot
@@ -26,7 +24,7 @@ class Benchmark(threading.Thread):
 
     def get_distances(self):
         Assert.not_empty(self.test_results, "No results to generate statistics for.")
-        return [result.best_distance for result in self.test_results]
+        return [result.get_distance() for result in self.test_results]
 
     def get_total_time(self):
         return self.algorithm.get_run_time()
@@ -48,8 +46,16 @@ class Benchmark(threading.Thread):
             self.algorithm.get_run_time()
         )
 
-    def plot_distances(self):
-        Plot.distances(
+    def plot_distance_distribution(self):
+        Plot.candlestick_distances(
+            self.algorithm.get_algorithm_name(),
+            self.get_distances(),
+            self.subset_size,
+            self.iterations
+        )
+
+    def plot_distance_progress(self):
+        Plot.scatter_distances(
             self.algorithm.get_algorithm_name(),
             self.get_distances(),
             self.subset_size,
@@ -61,21 +67,24 @@ class Benchmark(threading.Thread):
 class TestResult(object):
     def __init__(self):
         self.subset_size = 0
-        self.best_distance = 0
+        self.total_distance = 0
 
     def __eq__(self, other: 'TestResult'):
         return self.subset_size == other.subset_size and \
-               self.best_distance == other.best_distance
+               self.total_distance == other.total_distance
 
     def __lt__(self, other: 'TestResult'):
-        return self.best_distance < other.best_distance
+        return self.total_distance < other.total_distance
 
     @staticmethod
     def from_solution(solution: AlgorithmSolution):
         tr = TestResult()
         tr.subset_size = len(solution.get_colours())
-        tr.best_distance = solution.get_total_distance()
+        tr.total_distance = solution.get_total_distance()
         return tr
+
+    def get_distance(self):
+        return self.total_distance
 
 
 class TestRunConfiguration(object):
@@ -99,6 +108,7 @@ class TestRunner(object):
         self.run_configurations = []
         self.threads = []
         self.benchmarks = []
+        self.algorithms = set()
 
     def add_run_configuration(self, algorithm_type: AlgorithmType, subset_size: int, iterations: int):
         """
@@ -109,6 +119,7 @@ class TestRunner(object):
         """
         trc = TestRunConfiguration(algorithm_type, subset_size, iterations)
         self.run_configurations.append(trc)
+        self.algorithms.add(algorithm_type)
 
     def configure(self):
         for test_run in self.run_configurations:
@@ -129,6 +140,32 @@ class TestRunner(object):
                 )
 
             benchmark.plot_colours()
+
+    def plot_all(self):
+        self.__plot_benchmarks()
+        self.plot_distances()
+    # def plot_run_times(self):
+    #
+    #     data = {}
+    #     for benchmark in self.benchmarks:
+    #         data[
+    #             benchmark.subset_size, benchmark.iterations, benchmark.algorithm.get_algorithm_name()
+    #         ] = benchmark.get_total_time()
+    #
+    #     graphics_values = []
+    #     for run_configuration in self.run_configurations:
+    #         algorithms = []
+    #         iterations = []
+    #         times = []
+    #         for subset, alg_iterations, algorithm in data:
+    #             if subset == run_configuration.subset_size and alg_iterations == run_configuration.iterations:
+    #                 algorithms.append(algorithm)
+    #                 times.append(data[subset, alg_iterations, algorithm])
+    #                 iterations.append(alg_iterations)
+    #         graphics_values.append((algorithms, iterations, times))
+    #
+    #     for algorithms, iterations, times in graphics_values:
+    #         Plot.barchart(algorithms, times, iterations)
 
     def __start_benchmarks(self):
         # Start all the benchmarks in parallel
@@ -153,7 +190,10 @@ class TestRunner(object):
         running_time = Time.millis_to_seconds(timestamp_end, timestamp_start)
         print(f"All threads finished in {running_time} s")
 
-        self.__plot_benchmarks()
-
     def get_benchmarks(self):
         return self.benchmarks
+
+    def plot_distances(self):
+        for benchmark in self.benchmarks:
+            benchmark.plot_distance_distribution()
+            benchmark.plot_distance_progress()

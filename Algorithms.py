@@ -12,7 +12,7 @@ class AlgorithmType(Enum):
     GREEDY_CONSTRUCTIVE = 0,
     HILL_CLIMBING = 1,
     MULTI_START_HC = 2,
-    CUSTOM_ALGORITHM = 3
+    DELTA_SORT = 3
 
 
 @total_ordering
@@ -76,8 +76,8 @@ class Algorithm(metaclass=abc.ABCMeta):
         if algorithm_type == AlgorithmType.MULTI_START_HC:
             return MultiStartHillClimbing()
 
-        if algorithm_type == AlgorithmType.CUSTOM_ALGORITHM:
-            return CustomAlgorithm()
+        if algorithm_type == AlgorithmType.DELTA_SORT:
+            return DeltaSort()
 
     @abc.abstractmethod
     def find_solution(self, *args):
@@ -207,8 +207,8 @@ class HillClimbing(Algorithm):
                 if self.debug:
                     print(f"Previous distance: {self.best_solution_distance} - New distance: {temp_solution_distance}")
                 self.best_solution = self.temp_solution.clone()
-                self.save_solution(self.best_solution)
                 self.best_solution_distance = temp_solution_distance
+                self.save_solution(self.best_solution)
             else:
                 # Not improving; go back to previous state
                 self.temp_solution = self.best_solution.clone()
@@ -225,9 +225,9 @@ class MultiStartHillClimbing(Algorithm):
         self.save_solution(algorithm.get_best_solution())
 
 
-class CustomAlgorithm(Algorithm):
+class DeltaSort(Algorithm):
     def __init__(self):
-        super(CustomAlgorithm, self).__init__()
+        super(DeltaSort, self).__init__()
 
     def find_solution(self):
         algorithm = Algorithm.factory(AlgorithmType.GREEDY_CONSTRUCTIVE, GreedyConstructive.DistanceMethod.DELTA_E)
